@@ -35,7 +35,7 @@ public class Node {
 	}*/
 	
 	public void computeHashes() {
-		if (type == NodeType.FOLDER) { // file hashes should be computed already
+		if (type == NodeType.FOLDER) { // file hashes should be computed already 
 			for (Node child : children) {
 				child.computeHashes();
 			}
