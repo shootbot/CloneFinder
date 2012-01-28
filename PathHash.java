@@ -1,11 +1,5 @@
-import java.io.IOException;
-import java.io.File;
-import java.nio.file.*;
-import java.security.*;
-import java.math.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
-import com.twmacinta.util.MD5;
+
+
 
 public class PathHash implements Comparable<PathHash>{
 	public String path;
@@ -20,4 +14,9 @@ public class PathHash implements Comparable<PathHash>{
     public int compareTo(PathHash o) {
 		return hash.compareTo(o.hash);
     }
+	
+	@Override
+	public String toString() {
+		return path;
+	}
 }

@@ -15,44 +15,60 @@ enum Uniqueness {
 }
 
 class CloneFinder {
-	static class PrintVisitor implements FileVisitor<Path> {
-		int depth = 0;
+	public static ArrayList<PathHash> makeSet(Node tree) {
+		ArrayList<PathHash> set = new ArrayList<PathHash>();
+		runThrough(tree, set);
+		return set;
+	}
 		
-		@Override
-		public FileVisitResult visitFile(Path file,	BasicFileAttributes attrs) throws IOException {
-			for (int i = 0; i < depth; i++) System.out.print(" ");
-			System.out.println(file.getFileName());
-			return FileVisitResult.CONTINUE;
-		}
-		
-		@Override
-		public FileVisitResult visitFileFailed(Path file, IOException exc) {
-			System.err.println(exc);
-			return FileVisitResult.CONTINUE;
-		}
-		
-		@Override
-		public FileVisitResult preVisitDirectory(Path file,	BasicFileAttributes attrs) throws IOException {
-			for (int i = 0; i < depth; i++) {
-				System.out.print(" ");
+	public static void runThrough(Node tree, ArrayList<PathHash> set) {
+		if (tree.type == NodeType.FOLDER) {
+			for (Node child : tree.children) {
+				runThrough(child, set);
 			}
-			System.out.println(file.getFileName());
-			depth++;
-			return FileVisitResult.CONTINUE;
-		}
-		
-		@Override
-		public FileVisitResult postVisitDirectory(Path file, IOException exc) throws IOException {
-			depth--;
-			return FileVisitResult.CONTINUE;
+		} 
+		PathHash ph = new PathHash(tree.path, tree.hash);
+		set.add(ph);
+		//System.out.println("runThrough: " + ph);
+	}
+	
+	public static void findDuplicates(ArrayList<PathHash> set) {
+		Collections.sort(set);
+		PathHash phPrev = null, phCur;
+		Iterator<PathHash> i = set.iterator();
+		while (i.hasNext()) {
+			phCur = i.next();
+			if (phPrev == null) {
+				phPrev = phCur;
+				continue;
+			} else {
+				if (phCur.hash.compareTo(phPrev.hash) == 0) {
+					System.out.println("Duplicate: \n" + phPrev.toString() + "\n" + phCur.toString());
+				}
+				phPrev = phCur;
+			}
+			
 		}
 	}
-
+		
     public static void main(String[] args) throws IOException {
 
 		CreateTreeVisitor treeVisitor = new CreateTreeVisitor();
-		Files.walkFileTree(Paths.get("d:\\_music"), treeVisitor);
-		//treeVisitor.current.show(0);
+		String path;
+		if (args.length == 0) {
+			path = "C:\\_Games\\Counter-Strike\\AntiCheats";
+		} else {
+			path = args[0];
+		}
+		Files.walkFileTree(Paths.get(path), treeVisitor);
+		Node tree = treeVisitor.getNode();
+		tree.computeHashes();
+		tree.show(0);
+		
+		findDuplicates(makeSet(tree));
+		
+		
+		
 		
         /*Node tree = createTree("N:\\_Video\\Game movies", null);
         FileStream treefs = new FileStream("tree.xml", FileMode.Create);

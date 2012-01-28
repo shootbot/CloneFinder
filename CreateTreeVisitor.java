@@ -8,17 +8,21 @@ import java.util.*;
 import com.twmacinta.util.MD5;
 
 public class CreateTreeVisitor implements FileVisitor<Path> {
-	public Node current;
-	public int total;
+	Node current;
+	//public int total;
 	
+	public Node getNode() {
+		return current;
+	}
 	
 	@Override
 	public FileVisitResult visitFile(Path path,	BasicFileAttributes attrs) throws IOException {
 		Node newNode = new Node(NodeType.FILE, path.getFileName().toString());
+		newNode.path = path.toAbsolutePath().toString();
 		newNode.hash = MD5.asHex(MD5.getHash(new File(path.toAbsolutePath().toString())));
 		current.addChild(newNode);
-		System.out.println(++total);
-		if (total > 1000) return FileVisitResult.TERMINATE;
+		//System.out.println(++total);
+		//if (total > 1000) return FileVisitResult.TERMINATE;
 		return FileVisitResult.CONTINUE;
 	}
 	
@@ -31,9 +35,7 @@ public class CreateTreeVisitor implements FileVisitor<Path> {
 	@Override
 	public FileVisitResult preVisitDirectory(Path path,	BasicFileAttributes attrs) throws IOException {
 		Node newNode = new Node(NodeType.FOLDER, path.getFileName().toString());
-		MD5 md5 = new MD5();
-		md5.Update("", null);
-		newNode.hash = md5.asHex();
+		newNode.path = path.toAbsolutePath().toString();
 		if (current == null) {
 			current = newNode;
 		} else {
