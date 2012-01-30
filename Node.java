@@ -1,6 +1,7 @@
 import java.util.*;
 import java.io.IOException;
 import java.io.*;
+import javax.swing.*;
 import javax.swing.tree.*;
 
 public class Node implements Comparable<Node> {
@@ -45,6 +46,29 @@ public class Node implements Comparable<Node> {
 		}
 	}
 	
+	public void setUniqns(Uniqueness uni) {
+		this.uniqueness = uni;
+		for (Node child : this.children) {
+			child.setUniqns(uni);
+		}
+	}
+	
+	public static void compare(Node tree1, Node tree2, Node result) {
+		if (tree1.hash.equals(tree2.hash)) {
+			result.setUniqns(Uniqueness.EQ); // set whole branch to EQ
+		} else {
+			result.uniqns = Uniqueness.NE;
+			for (Node child1 : tree1.children) {
+				Node child2 = tree2.getChildByName(child1.name);
+				if (child2 == null) {
+					result.getChildByName(child1.name).setUniqns(Uniqueness.O1);
+				} else {
+					compare(child1, child2, result.getChildByName(child1.name));
+				}
+				//check tree2 children too!
+				//recheck all this shit
+				
+	
 	public Node getChildByName(String name) {
 		Iterator<Node> i = children.iterator();
 		while (i.hasNext()) {
@@ -54,8 +78,8 @@ public class Node implements Comparable<Node> {
 		return null;
 	}
 	
-	public JTree makeJTree(Node tree) {
-		DefaultMutableTreeNode root = tree.makeJNode();
+	public JTree makeJTree() {
+		DefaultMutableTreeNode root = this.makeJNode();
 		
 		return new JTree(root);
 	}
@@ -65,6 +89,7 @@ public class Node implements Comparable<Node> {
 		for (Node child : this.children) {
 			jnode.add(child.makeJNode());
 		}
+		return jnode;
 	}
 	
 	public ArrayList<Node> makeNodeSet() {

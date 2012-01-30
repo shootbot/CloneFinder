@@ -62,15 +62,15 @@ class CloneFinder extends JFrame {
 		//result.writeHtml(fw, 0);
         //fw.close();
 		
-        tree.show();
+        
         
     }
 	
 	public static void main(String[] args) {
-		new CloneFinder();
+		new CloneFinder(args);
 	}
 
-	public CloneFinder() {
+	public CloneFinder(String[] args) {
 		super("CloneFinder");
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -83,7 +83,7 @@ class CloneFinder extends JFrame {
 		content.setLayout(new FlowLayout());
 		//frame.getContentPane().add(tree, BorderLayout.CENTER);
 		
-		DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
+		/*DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
 		DefaultMutableTreeNode child;
 		DefaultMutableTreeNode grandChild;
 		for(int childIndex = 1; childIndex < 4; childIndex++) {
@@ -95,15 +95,31 @@ class CloneFinder extends JFrame {
 			}
 		}
 		
-		JTree tree2 = new JTree(root);
+		JTree tree2 = new JTree(root);*/
+		String path2;
+		if (args.length == 0) {
+			path2 = "n:\\_vcd";
+		} else {
+			path2 = args[0];
+		}
+		
+		CreateTreeVisitor treeVisitor = new CreateTreeVisitor();
+		try {
+			Files.walkFileTree(Paths.get(path2), treeVisitor);
+		} catch(Exception e) {
+			System.out.println("Error: " + e);
+		}	
+		Node tree1 = treeVisitor.getNode();
+		
+		JTree tree = tree1.makeJTree();
 		MyDefaultTreeCellRenderer renderer2 = new MyDefaultTreeCellRenderer();
 		renderer2.setOpenIcon(null);
 		renderer2.setClosedIcon(null);
 		renderer2.setLeafIcon(null);
 		renderer2.setBackgroundSelectionColor(Color.white);
-		tree2.setCellRenderer(renderer2);
+		tree.setCellRenderer(renderer2);
 		//tree2.setRootVisible(false);
-		content.add(tree2);
+		content.add(tree);
 		
 		setSize(500, 500);
 		//pack();
@@ -113,11 +129,8 @@ class CloneFinder extends JFrame {
 	private class MyDefaultTreeCellRenderer extends DefaultTreeCellRenderer {
 		@Override
 		public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-			String s = ((DefaultMutableTreeNode) value).getUserObject().toString();
-			if (s.length() > 5) {
-				textNonSelectionColor = Color.red;
-				textSelectionColor = Color.red;
-			} else if (s.length() > 4) {
+			Node node = (Node) ((DefaultMutableTreeNode) value).getUserObject();
+			if (node.type == NodeType.FOLDER) {
 				textNonSelectionColor = Color.blue;
 				textSelectionColor = Color.blue;
 			} else {
