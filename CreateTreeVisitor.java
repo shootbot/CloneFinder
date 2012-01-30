@@ -8,7 +8,7 @@ import java.util.*;
 import com.twmacinta.util.MD5;
 
 public class CreateTreeVisitor implements FileVisitor<Path> {
-	private Node current;
+	private Node current = null;
 	private MD5 md5 = new MD5();
 	
 	public Node getNode() {

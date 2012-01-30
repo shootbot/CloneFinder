@@ -1,16 +1,15 @@
 import java.util.*;
 import java.io.IOException;
 import java.io.*;
+import javax.swing.tree.*;
 
 public class Node implements Comparable<Node> {
 	public Node parent;
 	public NodeType type; // folder or file
 	public Uniqueness uniqns; //
-	
 	public String name;
 	public String hash;
 	public String path;
-	
 	public ArrayList<Node> children;
 
 	public Node(NodeType type, String name) {
@@ -55,13 +54,40 @@ public class Node implements Comparable<Node> {
 		return null;
 	}
 	
-	public Node merge(Node tree2) {
-		Node tree1 = this;
-		Node result = this.copy();
-		result.tryCopy(tree2);
+	public JTree makeJTree(Node tree) {
+		DefaultMutableTreeNode root = tree.makeJNode();
+		
+		return new JTree(root);
+	}
+	
+	public DefaultMutableTreeNode makeJNode() {
+		DefaultMutableTreeNode jnode = new DefaultMutableTreeNode(this);
+		for (Node child : this.children) {
+			jnode.add(child.makeJNode());
+		}
+	}
+	
+	public ArrayList<Node> makeNodeSet() {
+		ArrayList<Node> nodeSet = new ArrayList<Node>();
+		this.runThrough(nodeSet);
+		return nodeSet;
+	}
+	
+	public static Node merge(Node tree1, Node tree2) {
+		Node result = tree1.copy();
+		tryCopy(result, tree2);
 		return result;
 	}
-		
+	
+	public void runThrough(ArrayList<Node> nodeSet) {
+		if (this.type == NodeType.FOLDER) {
+			for (Node child : this.children) {
+				child.runThrough(nodeSet);
+			}
+		} 
+		nodeSet.add(this);
+		//System.out.println("runThrough: " + ph);
+	}
 	
 	public void show(int depth) {
 		for (int j = 0; j < depth; j++) {
@@ -74,12 +100,12 @@ public class Node implements Comparable<Node> {
 		}
 	}
 	
-	public Node tryCopy(Node tree2) {
-		Node result = this;
+	public static Node tryCopy(Node tree1, Node tree2) {
+		Node result = tree1;
 		for (Node child : tree2.children) {
-			Node tree1Child = result.getChildByName(child.name);
+			Node tree1Child = tree1.getChildByName(child.name);
 			if (tree1Child != null) {
-				tree1Child.tryCopy(child);
+				tryCopy(tree1Child, child);
 			} else {
 				result.addChild(child.copy());
 			}

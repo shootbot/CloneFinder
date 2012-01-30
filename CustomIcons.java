@@ -13,7 +13,7 @@ public class CustomIcons extends JFrame {
 	}
 
 	public CustomIcons() {
-		super("JTree Selections");
+		super("CloneFinder");
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch(Exception e) {
