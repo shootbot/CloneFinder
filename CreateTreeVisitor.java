@@ -8,21 +8,20 @@ import java.util.*;
 import com.twmacinta.util.MD5;
 
 public class CreateTreeVisitor implements FileVisitor<Path> {
-	Node current;
-	//public int total;
+	private Node current;
+	private MD5 md5 = new MD5();
 	
 	public Node getNode() {
 		return current;
 	}
-	
+		
 	@Override
 	public FileVisitResult visitFile(Path path,	BasicFileAttributes attrs) throws IOException {
 		Node newNode = new Node(NodeType.FILE, path.getFileName().toString());
 		newNode.path = path.toAbsolutePath().toString();
 		newNode.hash = MD5.asHex(MD5.getHash(new File(path.toAbsolutePath().toString())));
 		current.addChild(newNode);
-		//System.out.println(++total);
-		//if (total > 1000) return FileVisitResult.TERMINATE;
+		
 		return FileVisitResult.CONTINUE;
 	}
 	
@@ -47,6 +46,31 @@ public class CreateTreeVisitor implements FileVisitor<Path> {
 	
 	@Override
 	public FileVisitResult postVisitDirectory(Path path, IOException exc) throws IOException {
+		byte[] folderHash = new byte[16];
+		for (Node child : current.children) {
+			try {
+				byte[] childName = child.name.getBytes("UTF-8");
+				for (int i = 0; i < Math.min(16, childName.length); i++) {
+					folderHash[i] ^= childName[i];
+				}
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+			
+			try {
+				byte[] childHash = child.hash.getBytes("UTF-8");
+				for (int i = 0; i < Math.min(16, childHash.length); i++) {
+					folderHash[i] ^= childHash[i];
+				}
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+			
+		}
+		md5.Init();
+		md5.Update(folderHash);
+		current.hash = md5.asHex();
+		
 		if (current.parent != null) {
 			current = current.parent;
 		}

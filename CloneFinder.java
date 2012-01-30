@@ -4,6 +4,7 @@ import java.security.*;
 import java.math.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.io.*;
 
 enum NodeType {
     FOLDER, FILE;
@@ -15,35 +16,34 @@ enum Uniqueness {
 }
 
 class CloneFinder {
-	public static ArrayList<PathHash> makeSet(Node tree) {
-		ArrayList<PathHash> set = new ArrayList<PathHash>();
-		runThrough(tree, set);
-		return set;
+	public static ArrayList<Node> makeNodeSet(Node tree) {
+		ArrayList<Node> nodeSet = new ArrayList<Node>();
+		runThrough(tree, nodeSet);
+		return nodeSet;
 	}
 		
-	public static void runThrough(Node tree, ArrayList<PathHash> set) {
+	public static void runThrough(Node tree, ArrayList<Node> nodeSet) {
 		if (tree.type == NodeType.FOLDER) {
 			for (Node child : tree.children) {
-				runThrough(child, set);
+				runThrough(child, nodeSet);
 			}
 		} 
-		PathHash ph = new PathHash(tree.path, tree.hash);
-		set.add(ph);
+		nodeSet.add(tree);
 		//System.out.println("runThrough: " + ph);
 	}
 	
-	public static void findDuplicates(ArrayList<PathHash> set) {
-		Collections.sort(set);
-		PathHash phPrev = null, phCur;
-		Iterator<PathHash> i = set.iterator();
+	public static void findDuplicates(ArrayList<Node> nodeSet) {
+		Collections.sort(nodeSet);
+		Node phPrev = null, phCur;
+		Iterator<Node> i = nodeSet.iterator();
 		while (i.hasNext()) {
 			phCur = i.next();
 			if (phPrev == null) {
 				phPrev = phCur;
 				continue;
 			} else {
-				if (phCur.hash.compareTo(phPrev.hash) == 0) {
-					System.out.println("Duplicate: \n" + phPrev.toString() + "\n" + phCur.toString());
+				if (phCur.compareTo(phPrev) == 0) {
+					System.out.println("Duplicate: \n" + phPrev.path + "\n" + phCur.path);
 				}
 				phPrev = phCur;
 			}
@@ -56,26 +56,27 @@ class CloneFinder {
 		CreateTreeVisitor treeVisitor = new CreateTreeVisitor();
 		String path;
 		if (args.length == 0) {
-			path = "C:\\_Games\\Counter-Strike\\AntiCheats";
+			path = "D:\\Documents and Settings\\nurmagambetov_ta\\CloneFinder\\test";
 		} else {
 			path = args[0];
 		}
 		Files.walkFileTree(Paths.get(path), treeVisitor);
 		Node tree = treeVisitor.getNode();
-		tree.computeHashes();
+			//tree.computeHashes();
 		tree.show(0);
 		
-		findDuplicates(makeSet(tree));
+		//findDuplicates(makeNodeSet(tree));
 		
-		
+		//FileWriter fw = new FileWriter("tree.htm");
+		//tree.writeHtml(fw, 0);
+        //fw.close();
 		
 		
         /*Node tree = createTree("N:\\_Video\\Game movies", null);
-        FileStream treefs = new FileStream("tree.xml", FileMode.Create);
-        StreamWriter treesw = new StreamWriter(treefs);
+        
         //Node treeCopy = tree.copy();
         //tree.writexml(treesw);
-        tree.show();
-        treesw.Close();*/
+        tree.show();*/
+        
     }
  }
