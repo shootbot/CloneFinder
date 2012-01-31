@@ -117,7 +117,7 @@ class CloneFinder extends JFrame {
 		renderer.setBackgroundSelectionColor(Color.white);
 		jtree.setCellRenderer(renderer);
 		//tree2.setRootVisible(false);
-		content.add(jtree);
+		content.add(jtree); 
 		
 		setSize(500, 500);
 		//pack();
