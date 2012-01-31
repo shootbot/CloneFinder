@@ -76,10 +76,12 @@ public class CreateTreeVisitor implements FileVisitor<Path> {
 		md5.Update(folderHash);
 		current.hash = md5.asHex();
 		
+		System.out.print("\r" + ++total);
 		if (current.parent != null) {
 			current = current.parent;
-		}
-		System.out.print("\r" + ++total);
+		} else {
+			System.out.println("\nDone");
+		}		
 		return FileVisitResult.CONTINUE;
 	}
 }

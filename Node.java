@@ -46,27 +46,31 @@ public class Node implements Comparable<Node> {
 		}
 	}
 	
-	public void setUniqns(Uniqueness uni) {
-		this.uniqueness = uni;
+	public void setUniqnsRecursively(Uniqueness uni) {
+		this.uniqns = uni;
 		for (Node child : this.children) {
-			child.setUniqns(uni);
+			child.setUniqnsRecursively(uni);
 		}
 	}
 	
 	public static void compare(Node tree1, Node tree2, Node result) {
 		if (tree1.hash.equals(tree2.hash)) {
-			result.setUniqns(Uniqueness.EQ); // set whole branch to EQ
+			result.setUniqnsRecursively(Uniqueness.EQ); // set whole branch to EQ
 		} else {
 			result.uniqns = Uniqueness.NE;
-			for (Node child1 : tree1.children) {
-				Node child2 = tree2.getChildByName(child1.name);
-				if (child2 == null) {
-					result.getChildByName(child1.name).setUniqns(Uniqueness.O1);
+			for (Node child : result.children) {
+				Node fpChild = tree1.getChildByName(child.name);
+				Node spChild = tree2.getChildByName(child.name);
+				if (fpChild == null) {
+					child.setUniqnsRecursively(Uniqueness.O2);
+				} else if (spChild == null) {
+					child.setUniqnsRecursively(Uniqueness.O1);
 				} else {
-					compare(child1, child2, result.getChildByName(child1.name));
+					compare(fpChild, spChild, child);
 				}
-				//check tree2 children too!
-				//recheck all this shit
+			}
+		}
+	}
 				
 	
 	public Node getChildByName(String name) {
@@ -80,7 +84,6 @@ public class Node implements Comparable<Node> {
 	
 	public JTree makeJTree() {
 		DefaultMutableTreeNode root = this.makeJNode();
-		
 		return new JTree(root);
 	}
 	
@@ -101,6 +104,7 @@ public class Node implements Comparable<Node> {
 	public static Node merge(Node tree1, Node tree2) {
 		Node result = tree1.copy();
 		tryCopy(result, tree2);
+		result.name = "***";
 		return result;
 	}
 	
@@ -123,16 +127,16 @@ public class Node implements Comparable<Node> {
 		for (Node c : this.children) {
 			c.show(depth + 1);
 		}
+		if (depth == 0) System.out.println();
 	}
 	
-	public static Node tryCopy(Node tree1, Node tree2) {
-		Node result = tree1;
+	public static Node tryCopy(Node result, Node tree2) {
 		for (Node child : tree2.children) {
-			Node tree1Child = tree1.getChildByName(child.name);
-			if (tree1Child != null) {
-				tryCopy(tree1Child, child);
-			} else {
+			Node resultChild = result.getChildByName(child.name);
+			if (resultChild == null) {
 				result.addChild(child.copy());
+			} else {
+				tryCopy(resultChild, child);
 			}
 		}
 		return result;

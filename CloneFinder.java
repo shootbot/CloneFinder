@@ -40,30 +40,42 @@ class CloneFinder extends JFrame {
 		}
 	}
 		
-    public static void init() throws IOException {
-		String path = "D:\\Documents and Settings\\nurmagambetov_ta\\CloneFinder\\test";
-		String path2 = "D:\\Documents and Settings\\nurmagambetov_ta\\CloneFinder\\com";
+    public static Node init() {
+		String path = "c:\\foresttd\\1";
+		String path2 = "c:\\foresttd\\2\\";
 		
 		CreateTreeVisitor treeVisitor = new CreateTreeVisitor();
-		Files.walkFileTree(Paths.get(path), treeVisitor);
+		try {
+			Files.walkFileTree(Paths.get(path), treeVisitor);
+		} catch(Exception e) {
+			System.out.println("Error: " + e);
+		}
 		Node tree1 = treeVisitor.getNode();
 
 		CreateTreeVisitor treeVisitor2 = new CreateTreeVisitor();
-		Files.walkFileTree(Paths.get(path2), treeVisitor2);
+		try {
+			Files.walkFileTree(Paths.get(path2), treeVisitor2);
+		} catch(Exception e) {
+			System.out.println("Error: " + e);
+		}
 		Node tree2 = treeVisitor2.getNode();
 		tree1.show(0);
 		tree2.show(0);
-		Node result = Node.merge(tree1, tree1);
+		Node result = Node.merge(tree1, tree2);
 		result.show(0);
+		Node.compare(tree1, tree2, result);
+		
+		try {
+			FileWriter fw = new FileWriter("tree.htm");
+			result.writeHtml(fw, 0);
+			fw.close();
+		} catch(Exception e) {
+			System.out.println("Error: " + e);
+		}
+		
+		return result;
 		
 		//findDuplicates(tree.makeNodeSet());
-		
-		//FileWriter fw = new FileWriter("tree.htm");
-		//result.writeHtml(fw, 0);
-        //fw.close();
-		
-        
-        
     }
 	
 	public static void main(String[] args) {
@@ -77,49 +89,35 @@ class CloneFinder extends JFrame {
 		} catch(Exception e) {
 			System.out.println("Error setting Java LAF: " + e);
 		}
-		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Container content = getContentPane();
 		content.setLayout(new FlowLayout());
 		//frame.getContentPane().add(tree, BorderLayout.CENTER);
 		
-		/*DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-		DefaultMutableTreeNode child;
-		DefaultMutableTreeNode grandChild;
-		for(int childIndex = 1; childIndex < 4; childIndex++) {
-			child = new DefaultMutableTreeNode("Child " + childIndex);
-			root.add(child);
-			for(int grandChildIndex = 1; grandChildIndex < 4; grandChildIndex++) {
-				grandChild = new DefaultMutableTreeNode("Grandchild " + childIndex + "." + grandChildIndex);
-				child.add(grandChild);
-			}
-		}
-		
-		JTree tree2 = new JTree(root);*/
-		String path2;
+		Node result = init();
+		/*String path;
 		if (args.length == 0) {
-			path2 = "n:\\_vcd";
+			path = "n:\\_vcd";
 		} else {
-			path2 = args[0];
-		}
-		
+			path = args[0];
+		}		
 		CreateTreeVisitor treeVisitor = new CreateTreeVisitor();
 		try {
-			Files.walkFileTree(Paths.get(path2), treeVisitor);
+			Files.walkFileTree(Paths.get(path), treeVisitor);
 		} catch(Exception e) {
 			System.out.println("Error: " + e);
-		}	
-		Node tree1 = treeVisitor.getNode();
+		}
+		Node tree = treeVisitor.getNode();*/
 		
-		JTree tree = tree1.makeJTree();
-		MyDefaultTreeCellRenderer renderer2 = new MyDefaultTreeCellRenderer();
-		renderer2.setOpenIcon(null);
-		renderer2.setClosedIcon(null);
-		renderer2.setLeafIcon(null);
-		renderer2.setBackgroundSelectionColor(Color.white);
-		tree.setCellRenderer(renderer2);
+		JTree jtree = result.makeJTree();
+		MyDefaultTreeCellRenderer renderer = new MyDefaultTreeCellRenderer();
+		renderer.setOpenIcon(null);
+		renderer.setClosedIcon(null);
+		renderer.setLeafIcon(null);
+		renderer.setBackgroundSelectionColor(Color.white);
+		jtree.setCellRenderer(renderer);
 		//tree2.setRootVisible(false);
-		content.add(tree);
+		content.add(jtree);
 		
 		setSize(500, 500);
 		//pack();
@@ -127,15 +125,27 @@ class CloneFinder extends JFrame {
 	}
 	
 	private class MyDefaultTreeCellRenderer extends DefaultTreeCellRenderer {
+		Color green = new Color(0, 160, 0); // darker than Color.green
 		@Override
 		public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 			Node node = (Node) ((DefaultMutableTreeNode) value).getUserObject();
-			if (node.type == NodeType.FOLDER) {
+			switch (node.uniqns) {
+			case EQ:
+				textNonSelectionColor = Color.black;
+				textSelectionColor = Color.black;
+				break;
+			case NE:
+				textNonSelectionColor = Color.red;
+				textSelectionColor = Color.red;
+				break;
+			case O1:
+				textNonSelectionColor = green;
+				textSelectionColor = green;
+				break;
+			case O2:
 				textNonSelectionColor = Color.blue;
 				textSelectionColor = Color.blue;
-			} else {
-				textNonSelectionColor = new Color(0, 192, 0);
-				textSelectionColor = new Color(0, 192, 0);
+				break;
 			}
 			return super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 		}
