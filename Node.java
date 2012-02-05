@@ -81,12 +81,7 @@ public class Node implements Comparable<Node> {
 		}
 		return null;
 	}
-	
-	public JTree makeJTree() {
-		DefaultMutableTreeNode root = this.makeJNode();
-		return new JTree(root);
-	}
-	
+		
 	public DefaultMutableTreeNode makeJNode() {
 		DefaultMutableTreeNode jnode = new DefaultMutableTreeNode(this);
 		for (Node child : this.children) {
