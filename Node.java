@@ -185,30 +185,6 @@ public class Node implements Comparable<Node> {
 			System.out.println("Error: " + e);
 		}
 	}
-	
-	/*public void writexml(Streamwriter fw, int depth = 0) {
-		if (depth == 0)
-		{
-			fw.write("<?xml version='1.0' encoding='UTF-8'?>");
-			fw.write("<!DOCTYPE xml>");
-		}
-		if (type == NodeType.FOLDER)
-		{
-			for (int j = 0; j < depth; j++) fw.write("  ");
-			fw.write("<" + this.name.Replace(' ', '_').Replace('(', '_').Replace(')', '_') + ">");
-			foreach (Node c in this.children)
-			{
-				c.writexml(fw, depth + 1);
-			}
-			for (int j = 0; j < depth; j++) fw.write("  ");
-			fw.write("</" + this.name.Replace(' ', '_').Replace('(', '_').Replace(')', '_') + ">");
-		}
-		else
-		{
-			for (int j = 0; j < depth; j++) fw.write("  ");
-			fw.write("<" + this.name.Replace(' ', '_').Replace('(', '_').Replace(')', '_') + "/>");
-		}
-	}*/
 
 	@Override
 	public String toString() {

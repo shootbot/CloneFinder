@@ -11,9 +11,18 @@ public class CreateTreeVisitor implements FileVisitor<Path> {
 	private Node current = null;
 	private MD5 md5 = new MD5();
 	private int total = 0;
+	private boolean makeTree = true;// если false то при обходе ниче не делаем кроме подсчета файлов и папок
 	
 	public Node getNode() {
 		return current;
+	}
+	
+	public int getTotal() {
+		return total;
+	}
+	
+	public void setMakeTree(boolean makeTree) {
+		this.makeTree = makeTree;
 	}
 	
 	public CreateTreeVisitor() {
@@ -22,11 +31,15 @@ public class CreateTreeVisitor implements FileVisitor<Path> {
 		
 	@Override
 	public FileVisitResult visitFile(Path path,	BasicFileAttributes attrs) throws IOException {
-		Node newNode = new Node(NodeType.FILE, path.getFileName().toString());
-		newNode.path = path.toAbsolutePath().toString();
-		newNode.hash = MD5.asHex(MD5.getHash(new File(path.toAbsolutePath().toString())));
-		current.addChild(newNode);
-		System.out.print("\r" + ++total);
+		if (makeTree) {
+			Node newNode = new Node(NodeType.FILE, path.getFileName().toString());
+			newNode.path = path.toAbsolutePath().toString();
+			newNode.hash = MD5.asHex(MD5.getHash(new File(path.toAbsolutePath().toString())));
+			current.addChild(newNode);
+			System.out.print("\r" + ++total);
+		} else {
+			total++;
+		}
 		return FileVisitResult.CONTINUE;
 	}
 	
@@ -38,50 +51,56 @@ public class CreateTreeVisitor implements FileVisitor<Path> {
 	
 	@Override
 	public FileVisitResult preVisitDirectory(Path path,	BasicFileAttributes attrs) throws IOException {
-		Node newNode = new Node(NodeType.FOLDER, path.getFileName().toString());
-		newNode.path = path.toAbsolutePath().toString();
-		if (current == null) {
-			current = newNode;
-		} else {
-			current.addChild(newNode);
-			current = newNode;
+		if (makeTree) {
+			Node newNode = new Node(NodeType.FOLDER, path.getFileName().toString());
+			newNode.path = path.toAbsolutePath().toString();
+			if (current == null) {
+				current = newNode;
+			} else {
+				current.addChild(newNode);
+				current = newNode;
+			}
 		}
 		return FileVisitResult.CONTINUE;
 	}
 	
 	@Override
 	public FileVisitResult postVisitDirectory(Path path, IOException exc) throws IOException {
-		byte[] folderHash = new byte[16];
-		for (Node child : current.children) {
-			try {
-				byte[] childName = child.name.getBytes("UTF-8");
-				for (int i = 0; i < Math.min(16, childName.length); i++) {
-					folderHash[i] ^= childName[i];
+		if (makeTree) {
+			byte[] folderHash = new byte[16];
+			for (Node child : current.children) {
+				try {
+					byte[] childName = child.name.getBytes("UTF-8");
+					for (int i = 0; i < Math.min(16, childName.length); i++) {
+						folderHash[i] ^= childName[i];
+					}
+				} catch (Exception e) {
+					System.out.println(e);
 				}
-			} catch (Exception e) {
-				System.out.println(e);
-			}
-			
-			try {
-				byte[] childHash = child.hash.getBytes("UTF-8");
-				for (int i = 0; i < Math.min(16, childHash.length); i++) {
-					folderHash[i] ^= childHash[i];
+				
+				try {
+					byte[] childHash = child.hash.getBytes("UTF-8");
+					for (int i = 0; i < Math.min(16, childHash.length); i++) {
+						folderHash[i] ^= childHash[i];
+					}
+				} catch (Exception e) {
+					System.out.println(e);
 				}
-			} catch (Exception e) {
-				System.out.println(e);
+				
 			}
+			md5.Init();
+			md5.Update(folderHash);
+			current.hash = md5.asHex();
 			
-		}
-		md5.Init();
-		md5.Update(folderHash);
-		current.hash = md5.asHex();
-		
-		System.out.print("\r" + ++total);
-		if (current.parent != null) {
-			current = current.parent;
+			System.out.print("\r" + ++total);
+			if (current.parent != null) {
+				current = current.parent;
+			} else {
+				System.out.println("\nDone");
+			}		
 		} else {
-			System.out.println("\nDone");
-		}		
+			total++;
+		}
 		return FileVisitResult.CONTINUE;
 	}
 }

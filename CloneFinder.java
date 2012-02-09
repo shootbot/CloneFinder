@@ -14,7 +14,6 @@ import java.awt.event.*;        //for action events
 import java.net.URL;
 import java.io.File;
 
-
 enum NodeType {
     FOLDER, FILE;
 }
@@ -141,11 +140,12 @@ class CloneFinder extends JPanel implements ActionListener {
 		renderer.setBackgroundSelectionColor(Color.white);
 		jtree.setCellRenderer(renderer);
 		bottomPane.add(new JScrollPane(jtree));
+		bottomPane.revalidate();
+		bottomPane.repaint();
 	}
-		
 
 	public CloneFinder() {
-		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		//setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		//
 		// file chooser
 		//
@@ -163,7 +163,7 @@ class CloneFinder extends JPanel implements ActionListener {
 			}
 		});
 		//
-		// choose textfields
+		// path textfields and labels
 		//
         dirPath1 = new JTextField(10);
 		dirPath2 = new JTextField(10);
@@ -191,6 +191,7 @@ class CloneFinder extends JPanel implements ActionListener {
 		// run button
 		//
 		runBtn = new JButton("Сравнить");
+		runBtn.setSize(150, 20);
 		runBtn.addActionListener(this);
 		//
 		// pane for label, textfield and button for first directory
@@ -239,15 +240,16 @@ class CloneFinder extends JPanel implements ActionListener {
 		topPane.add(runPane);
 		topPane.add(legendsPane);
 		topPane.setBorder(BorderFactory.createLineBorder(Color.blue));
-		topPane.setPreferredSize(new Dimension(600, 100));
+		topPane.setMinimumSize(new Dimension(580, 70));
+		topPane.setMaximumSize(new Dimension(580, 70));
 		//
 		// pane for resulting directory tree
 		//
 		bottomPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		bottomPane.setBorder(BorderFactory.createLineBorder(Color.blue));
 		
-		add(topPane);
-		add(bottomPane);
+		add(topPane, BorderLayout.PAGE_START);
+		add(bottomPane, BorderLayout.PAGE_END);
 		
     }
 	
