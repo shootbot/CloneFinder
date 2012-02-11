@@ -146,6 +146,7 @@ class CloneFinder extends JPanel implements ActionListener {
 
 	public CloneFinder() {
 		//setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		setLayout(new GridLayout(2, 1));
 		//
 		// file chooser
 		//
@@ -248,8 +249,8 @@ class CloneFinder extends JPanel implements ActionListener {
 		bottomPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		bottomPane.setBorder(BorderFactory.createLineBorder(Color.blue));
 		
-		add(topPane, BorderLayout.PAGE_START);
-		add(bottomPane, BorderLayout.PAGE_END);
+		add(topPane);//, BorderLayout.PAGE_START);
+		add(bottomPane);//, BorderLayout.PAGE_END);
 		
     }
 	
