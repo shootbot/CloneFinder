@@ -1,8 +1,9 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.io.IOException;
-import java.io.*;
-import javax.swing.*;
-import javax.swing.tree.*;
+import java.io.FileWriter;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 
 public class Node implements Comparable<Node> {
 	public Node parent;
@@ -30,13 +31,13 @@ public class Node implements Comparable<Node> {
 		nodeCopy.hash = hash;
 		nodeCopy.uniqns = uniqns;
 		nodeCopy.path = path;
-		
+
 		for (Node child : children) {
 			nodeCopy.addChild(child.copy());
 		}
 		return nodeCopy;
 	}
-		
+
 	public void delchild(Node n) {
 		Node p = n.parent;
 		if (p.children.contains(n)) {
@@ -45,14 +46,14 @@ public class Node implements Comparable<Node> {
 			System.out.println("error: attempt to remove nonexistent child");
 		}
 	}
-	
+
 	public void setUniqnsRecursively(Uniqueness uni) {
 		this.uniqns = uni;
 		for (Node child : this.children) {
 			child.setUniqnsRecursively(uni);
 		}
 	}
-	
+
 	public static void compare(Node tree1, Node tree2, Node result) {
 		if (tree1.hash.equals(tree2.hash)) {
 			result.setUniqnsRecursively(Uniqueness.EQ); // set whole branch to EQ
@@ -71,8 +72,7 @@ public class Node implements Comparable<Node> {
 			}
 		}
 	}
-				
-	
+
 	public Node getChildByName(String name) {
 		Iterator<Node> i = children.iterator();
 		while (i.hasNext()) {
@@ -81,7 +81,7 @@ public class Node implements Comparable<Node> {
 		}
 		return null;
 	}
-		
+
 	public DefaultMutableTreeNode makeJNode() {
 		DefaultMutableTreeNode jnode = new DefaultMutableTreeNode(this);
 		for (Node child : this.children) {
@@ -89,20 +89,20 @@ public class Node implements Comparable<Node> {
 		}
 		return jnode;
 	}
-	
+
 	public ArrayList<Node> makeNodeSet() {
 		ArrayList<Node> nodeSet = new ArrayList<Node>();
 		this.runThrough(nodeSet);
 		return nodeSet;
 	}
-	
+
 	public static Node merge(Node tree1, Node tree2) {
 		Node result = tree1.copy();
 		tryCopy(result, tree2);
 		result.name = "***";
 		return result;
 	}
-	
+
 	public void runThrough(ArrayList<Node> nodeSet) {
 		if (this.type == NodeType.FOLDER) {
 			for (Node child : this.children) {
@@ -112,19 +112,19 @@ public class Node implements Comparable<Node> {
 		nodeSet.add(this);
 		//System.out.println("runThrough: " + ph);
 	}
-	
+
 	public void show(int depth) {
 		for (int j = 0; j < depth; j++) {
 			System.out.print("  ");
 		}
 		System.out.println(this.name + " " + this.hash);
-		
+
 		for (Node c : this.children) {
 			c.show(depth + 1);
 		}
 		if (depth == 0) System.out.println();
 	}
-	
+
 	public static Node tryCopy(Node result, Node tree2) {
 		for (Node child : tree2.children) {
 			Node resultChild = result.getChildByName(child.name);
@@ -136,7 +136,7 @@ public class Node implements Comparable<Node> {
 		}
 		return result;
 	}
-	
+
 	public void writeHtml(FileWriter fw, int depth) {
 		String blue = "<font color=\"blue\">";
 		String green = "<font color=\"green\">";
@@ -185,36 +185,12 @@ public class Node implements Comparable<Node> {
 			System.out.println("Error: " + e);
 		}
 	}
-	
-	/*public void writexml(Streamwriter fw, int depth = 0) {
-		if (depth == 0)
-		{
-			fw.write("<?xml version='1.0' encoding='UTF-8'?>");
-			fw.write("<!DOCTYPE xml>");
-		}
-		if (type == NodeType.FOLDER)
-		{
-			for (int j = 0; j < depth; j++) fw.write("  ");
-			fw.write("<" + this.name.Replace(' ', '_').Replace('(', '_').Replace(')', '_') + ">");
-			foreach (Node c in this.children)
-			{
-				c.writexml(fw, depth + 1);
-			}
-			for (int j = 0; j < depth; j++) fw.write("  ");
-			fw.write("</" + this.name.Replace(' ', '_').Replace('(', '_').Replace(')', '_') + ">");
-		}
-		else
-		{
-			for (int j = 0; j < depth; j++) fw.write("  ");
-			fw.write("<" + this.name.Replace(' ', '_').Replace('(', '_').Replace(')', '_') + "/>");
-		}
-	}*/
 
 	@Override
 	public String toString() {
 		return name;
 	}	
-	
+
 	@Override
     public int compareTo(Node o) {
 		return hash.compareTo(o.hash);

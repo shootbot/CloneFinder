@@ -1,18 +1,31 @@
 import java.io.IOException;
-import java.nio.file.*;
-import java.security.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
-import java.io.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.tree.*;
-import javax.swing.text.*;
-import javax.swing.filechooser.*;
-import java.awt.event.*;        //for action events
-import java.net.URL;
 import java.io.File;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.net.URL;
+
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JTextField;
+import javax.swing.JScrollPane;
+import javax.swing.BorderFactory;
+import javax.swing.JTree;
+import javax.swing.JFrame;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.GridLayout;
+import java.awt.Dimension;
+import java.awt.Component;
+import java.awt.Color;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
 import net.miginfocom.swing.MigLayout;
 
 
@@ -25,15 +38,16 @@ enum Uniqueness {
     O1, O2, EQ, NE;
 }
 
-class CloneFinder extends JPanel implements ActionListener {
-	protected JLabel legendLabel1;
-	protected JLabel legendLabel2;
+class CloneFinder extends JFrame implements ActionListener {
 	protected JFileChooser fc;
-	protected JButton browseBtn1;
-	protected JButton browseBtn2;
-	protected JButton runBtn;
+	protected JButton btnBrowse1;
+	protected JButton btnBrowse2;
+	protected JButton btnRun;
 	protected JTextField dirPath1;
 	protected JTextField dirPath2;
+	protected JPanel pnBottom;
+	protected MyTreeCellRenderer renderer;
+	private static final Color MY_DARK_GREEN = new Color(0, 150, 0);
 	
 	
 	/*public static void findDuplicates(ArrayList<Node> nodeSet) {
@@ -70,29 +84,29 @@ class CloneFinder extends JPanel implements ActionListener {
     }
 	
 	private static void createAndShowGUI() {
-        JFrame frame = new JFrame("CloneFinder");
+        JFrame frame = new CloneFinder();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        frame.add(new CloneFinder());
 		frame.setLocation(200, 100);
-		frame.setPreferredSize(new Dimension(600, 500));
+		frame.setPreferredSize(new Dimension(800, 500));
         frame.pack();
-        frame.setVisible(true);
+		frame.setVisible(true);
+		
     }
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == browseBtn1) {
+		if (e.getSource() == btnBrowse1) {
 			if (fc.showOpenDialog(CloneFinder.this) == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
 				dirPath1.setText(file.getAbsolutePath());
 			}
-		} else if(e.getSource() == browseBtn2) {
+		} else if(e.getSource() == btnBrowse2) {
 			if (fc.showOpenDialog(CloneFinder.this) == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
 				dirPath2.setText(file.getAbsolutePath());
 			}
-		} else if(e.getSource() == runBtn) {
+		} else if(e.getSource() == btnRun) {
 			runComparison();
 		}
     }
@@ -101,24 +115,26 @@ class CloneFinder extends JPanel implements ActionListener {
 		String path1 = dirPath1.getText();
 		String path2 = dirPath2.getText();
 		
-		CreateTreeVisitor treeVisitor = new CreateTreeVisitor();
+		TreeVisitor treeVisitor = new TreeVisitor();
 		try {
 			Files.walkFileTree(Paths.get(path1), treeVisitor);
 		} catch(Exception e) {
 			//JOptionPane.showMessageDialog(getTopLevelAncestor(), e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
 			return;
 		}
-		System.out.println("after return");
 		Node tree1 = treeVisitor.getNode();
 
-		CreateTreeVisitor treeVisitor2 = new CreateTreeVisitor();
+		TreeVisitor treeVisitor2 = new TreeVisitor();
 		try {
 			Files.walkFileTree(Paths.get(path2), treeVisitor2);
 		} catch(Exception e) {
 			//JOptionPane.showMessageDialog((JFrame) getTopLevelAncestor(), e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
 			return;
 		}
 		Node tree2 = treeVisitor2.getNode();
+		
 		//tree1.show(0);
 		//tree2.show(0);
 		Node result = Node.merge(tree1, tree2);
@@ -134,22 +150,21 @@ class CloneFinder extends JPanel implements ActionListener {
 		}*/
 		
 		JTree jtree = new JTree(result.makeJNode());
-		MyDefaultTreeCellRenderer renderer = new MyDefaultTreeCellRenderer();
-		renderer.setOpenIcon(null);
-		renderer.setClosedIcon(null);
-		renderer.setLeafIcon(null);
-		renderer.setBackgroundSelectionColor(Color.white);
+		
 		jtree.setCellRenderer(renderer);
-		add(new JScrollPane(jtree));
-		this.revalidate();
+		pnBottom.add(new JScrollPane(jtree), "grow");
+		pnBottom.revalidate();
 	}
 		
-
 	public CloneFinder() {
+		super("Clonefinder");
+		renderer = new MyTreeCellRenderer();
+		
 		setLayout(new MigLayout());
-		//
-		// file chooser
-		//
+		
+		JPanel pnTop = new JPanel(new MigLayout());
+		add(pnTop, "wrap");
+		
 		fc = new JFileChooser();
 		fc.removeChoosableFileFilter(fc.getAcceptAllFileFilter());
 		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -160,60 +175,75 @@ class CloneFinder extends JPanel implements ActionListener {
 			}
 			@Override
 			public String getDescription() {
-				return "Только папки";
+				return "РўРѕР»СЊРєРѕ РїР°РїРєРё";
 			}
 		});
-		//
-		// choose textfields
-		//
-        dirPath1 = new JTextField(10);
-		dirPath2 = new JTextField(10);
-        JLabel lblDir1 = new JLabel("Первая папка:");
-		JLabel lblDir2 = new JLabel("Вторaя папка:");
-		//
-		// legend labels
-		//
-		legendLabel1 = new JLabel("Одинаковые");
-		legendLabel1.setForeground(Color.black);
-		legendLabel2 = new JLabel("Разные");
-		legendLabel2.setForeground(Color.red);
-		JLabel legendLabel3 = new JLabel("Только в первой");
-		legendLabel3.setForeground(new Color(0, 160, 0));
-		JLabel legendLabel4 = new JLabel("Только во второй");
-		legendLabel4.setForeground(Color.blue);
-		//
-		// browse buttons
-		//
-		browseBtn1 = new JButton("Обзор");
-        browseBtn1.addActionListener(this);
-		browseBtn2 = new JButton("Обзор");
-        browseBtn2.addActionListener(this);
 		
-		runBtn = new JButton("Сравнить");
-		runBtn.addActionListener(this);
+		JLabel lblDir1 = new JLabel("РџРµСЂРІР°СЏ РїР°РїРєР°:");
+		pnTop.add(lblDir1);
 		
-		add(lblDir1);
-		add(dirPath1);
-		add(browseBtn1);
-		add(runBtn, "span 1 2");
+		dirPath1 = new JTextField();
+		pnTop.add(dirPath1, "w 100!");
 		
-		JPanel legendsPane = new JPanel(new GridLayout(2, 2));
-		legendsPane.add(legendLabel1);
-		legendsPane.add(legendLabel3);
-		legendsPane.add(legendLabel2);
-		legendsPane.add(legendLabel4);
-		legendsPane.setBorder(BorderFactory.createLineBorder(Color.blue));//BorderFactory.createTitledBorder("Легенда"));
-		add(legendsPane, "span 1 2, wrap");
+		btnBrowse1 = new JButton("РћР±Р·РѕСЂ");
+        btnBrowse1.addActionListener(this);
+		pnTop.add(btnBrowse1);
 		
-		add(lblDir2);
-		add(dirPath2);
-		add(browseBtn2, "wrap");
+		btnRun = new JButton("РЎСЂР°РІРЅРёС‚СЊ");
+		btnRun.addActionListener(this);
+		pnTop.add(btnRun, "wrap");
 		
+		JLabel lblDir2 = new JLabel("Р’С‚РѕСЂaСЏ РїР°РїРєР°:");
+		pnTop.add(lblDir2);
 		
-    }
+		dirPath2 = new JTextField();
+		pnTop.add(dirPath2, "w 100!");
+		
+		btnBrowse2 = new JButton("РћР±Р·РѕСЂ");
+        btnBrowse2.addActionListener(this);
+		pnTop.add(btnBrowse2);
+		
+		final JDialog dialog = new JDialog(this, "Р›РµРіРµРЅРґР°");
+		JPanel pnDialog = new JPanel(new MigLayout());
+		JLabel lblLegend1 = new JLabel("РћРґРёРЅР°РєРѕРІС‹Рµ");
+		lblLegend1.setForeground(Color.black);
+		JLabel lblLegend2 = new JLabel("Р Р°Р·РЅС‹Рµ");
+		lblLegend2.setForeground(Color.red);
+		JLabel lblLegend3 = new JLabel("РўРѕР»СЊРєРѕ РІ РїРµСЂРІРѕР№");
+		lblLegend3.setForeground(MY_DARK_GREEN);
+		JLabel lblLegend4 = new JLabel("РўРѕР»СЊРєРѕ РІРѕ РІС‚РѕСЂРѕР№");
+		lblLegend4.setForeground(Color.blue);
+		pnDialog.add(lblLegend1, "wrap");
+		pnDialog.add(lblLegend2, "wrap");
+		pnDialog.add(lblLegend3, "wrap");
+		pnDialog.add(lblLegend4, "wrap");
+		dialog.setContentPane(pnDialog);
+		dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		dialog.setLocationRelativeTo(this);
+		dialog.pack();
+		
+		JButton btnLegend = new JButton("Р›РµРіРµРЅРґР°");
+		btnLegend.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				dialog.setVisible(true);
+			}	
+		});
+		pnTop.add(btnLegend, "growx");
+		
+		pnBottom = new JPanel(new MigLayout("", "[grow]", "[grow]"));
+		add(pnBottom);
+	}
 	
-	private class MyDefaultTreeCellRenderer extends DefaultTreeCellRenderer {
-		Color green = new Color(0, 160, 0); // darker than Color.green
+	private class MyTreeCellRenderer extends DefaultTreeCellRenderer {		
+		public MyTreeCellRenderer() {
+			super();
+			setOpenIcon(null);
+			setClosedIcon(null);
+			setLeafIcon(null);
+			setBackgroundSelectionColor(Color.white);
+		}
+		
 		@Override
 		public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 			Node node = (Node) ((DefaultMutableTreeNode) value).getUserObject();
@@ -227,8 +257,8 @@ class CloneFinder extends JPanel implements ActionListener {
 				textSelectionColor = Color.red;
 				break;
 			case O1:
-				textNonSelectionColor = green;
-				textSelectionColor = green;
+				textNonSelectionColor = MY_DARK_GREEN;
+				textSelectionColor = MY_DARK_GREEN;
 				break;
 			case O2:
 				textNonSelectionColor = Color.blue;
